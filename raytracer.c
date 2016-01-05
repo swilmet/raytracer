@@ -39,6 +39,8 @@ static void
 init_camera_frame (CameraFrame *camera)
 {
 	graphene_point3d_init (&camera->eye, 50.f, 0.f, 50.f);
+
+	/* The view direction is the y axis. */
 	graphene_vec3_init_from_vec3 (&camera->u, graphene_vec3_x_axis ());
 	graphene_vec3_init_from_vec3 (&camera->v, graphene_vec3_z_axis ());
 	graphene_vec3_negate (graphene_vec3_y_axis (), &camera->w);
@@ -59,6 +61,7 @@ init_objects (Raytracer *tracer)
 {
 	graphene_point3d_t center;
 
+	/* A red sphere of radius 10 centered on (20, 50, 20). */
 	graphene_point3d_init (&center, 20.f, 50.f, 20.f);
 	graphene_sphere_init (&tracer->sphere_red, &center, 10.f);
 }
