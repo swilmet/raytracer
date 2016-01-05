@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <graphene.h>
+#include <gtk/gtk.h>
 
 typedef struct _CameraFrame CameraFrame;
 typedef struct _ImagePlane ImagePlane;
@@ -21,7 +22,7 @@ struct _ImagePlane
 	float bottom;
 	float top;
 
-	/* TODO add pixbuf */
+	GdkPixbuf *pixbuf;
 
 	/* To support perspective projection, add a distance field. */
 };
@@ -54,6 +55,11 @@ init_image_plane (ImagePlane *image)
 	image->right = 50.f;
 	image->bottom = -50.f;
 	image->top = 50.f;
+
+	image->pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, 100, 100);
+
+	/* Apply a white background color. */
+	gdk_pixbuf_fill (image->pixbuf, 0xffffffff);
 }
 
 static void
@@ -75,11 +81,29 @@ init (Raytracer *tracer)
 }
 
 int
-main (void)
+main (int    argc,
+      char **argv)
 {
+	GtkWidget *window;
+	GtkWidget *image;
 	Raytracer tracer;
 
+	gtk_init (&argc, &argv);
+
+	window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_default_size (GTK_WINDOW (window), 120, 120);
+	g_signal_connect (window, "destroy", gtk_main_quit, NULL);
+
 	init (&tracer);
+
+	image = gtk_image_new_from_pixbuf (tracer.image.pixbuf);
+	gtk_container_add (GTK_CONTAINER (window), image);
+
+	gtk_widget_show_all (window);
+	gtk_main ();
+
+	/* Be Valgrind-friendly */
+	g_object_unref (tracer.image.pixbuf);
 
 	return EXIT_SUCCESS;
 }
