@@ -80,6 +80,48 @@ init (Raytracer *tracer)
 	init_objects (tracer);
 }
 
+static void
+put_pixel (GdkPixbuf *pixbuf,
+	   int        pixel_i,
+	   int        pixel_j,
+	   guchar     red,
+	   guchar     green,
+	   guchar     blue)
+{
+	int width;
+	int height;
+	int rowstride;
+	int n_channels;
+	guchar *pixels;
+	guchar *p;
+
+	width = gdk_pixbuf_get_width (pixbuf);
+	height = gdk_pixbuf_get_height (pixbuf);
+
+	g_assert (0 <= pixel_i && pixel_i < width);
+	g_assert (0 <= pixel_j && pixel_j < height);
+
+	rowstride = gdk_pixbuf_get_rowstride (pixbuf);
+
+	n_channels = gdk_pixbuf_get_n_channels (pixbuf);
+	g_assert_cmpint (n_channels, ==, 3);
+
+	pixels = gdk_pixbuf_get_pixels (pixbuf);
+
+	p = pixels + pixel_j * rowstride + pixel_i * n_channels;
+	p[0] = red;
+	p[1] = green;
+	p[2] = blue;
+}
+
+static void
+launch (Raytracer *tracer)
+{
+	put_pixel (tracer->image.pixbuf,
+		   50, 50,
+		   0xff, 0x00, 0x00);
+}
+
 int
 main (int    argc,
       char **argv)
@@ -100,6 +142,9 @@ main (int    argc,
 	gtk_container_add (GTK_CONTAINER (window), image);
 
 	gtk_widget_show_all (window);
+
+	launch (&tracer);
+
 	gtk_main ();
 
 	/* Be Valgrind-friendly */
