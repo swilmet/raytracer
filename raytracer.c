@@ -80,6 +80,55 @@ init (Raytracer *tracer)
 	init_objects (tracer);
 }
 
+/* Compute the ray for the pixel at position (i,j). */
+static void
+compute_ray (Raytracer      *tracer,
+	     int             pixel_i,
+	     int             pixel_j,
+	     graphene_ray_t *ray)
+{
+	ImagePlane *image = &tracer->image;
+	int width;
+	int height;
+	float u;
+	float v;
+	graphene_vec3_t u_vec3;
+	graphene_vec3_t v_vec3;
+	graphene_vec3_t uu;
+	graphene_vec3_t vv;
+	graphene_vec3_t eye;
+	graphene_vec3_t origin_vec3;
+	graphene_point3d_t origin;
+	graphene_vec3_t direction;
+
+	width = gdk_pixbuf_get_width (image->pixbuf);
+	height = gdk_pixbuf_get_height (image->pixbuf);
+
+	g_assert (0 <= pixel_i && pixel_i < width);
+	g_assert (0 <= pixel_j && pixel_j < height);
+
+	u = image->left + (image->right - image->left) * (pixel_i + 0.5) / width;
+	v = image->top + (image->bottom - image->top) * (pixel_j + 0.5) / height;
+
+	g_assert (image->left < u && u < image->right);
+	g_assert (image->bottom < v && v < image->top);
+
+	graphene_vec3_init (&u_vec3, u, u, u);
+	graphene_vec3_init (&v_vec3, v, v, v);
+
+	graphene_vec3_multiply (&tracer->camera.u, &u_vec3, &uu);
+	graphene_vec3_multiply (&tracer->camera.v, &v_vec3, &vv);
+
+	graphene_point3d_to_vec3 (&tracer->camera.eye, &eye);
+	graphene_vec3_add (&eye, &uu, &origin_vec3);
+	graphene_vec3_add (&origin_vec3, &vv, &origin_vec3);
+	graphene_point3d_init_from_vec3 (&origin, &origin_vec3);
+
+	graphene_vec3_negate (&tracer->camera.w, &direction);
+
+	graphene_ray_init (ray, &origin, &direction);
+}
+
 static void
 put_pixel (GdkPixbuf *pixbuf,
 	   int        pixel_i,
@@ -114,12 +163,41 @@ put_pixel (GdkPixbuf *pixbuf,
 	p[2] = blue;
 }
 
+static bool
+intersect_object (Raytracer      *tracer,
+		  graphene_ray_t *ray)
+{
+	return true;
+}
+
 static void
 launch (Raytracer *tracer)
 {
-	put_pixel (tracer->image.pixbuf,
-		   50, 50,
-		   0xff, 0x00, 0x00);
+	int width;
+	int height;
+	int pixel_i;
+
+	width = gdk_pixbuf_get_width (tracer->image.pixbuf);
+	height = gdk_pixbuf_get_height (tracer->image.pixbuf);
+
+	for (pixel_i = 0; pixel_i < width; pixel_i++)
+	{
+		int pixel_j;
+
+		for (pixel_j = 0; pixel_j < height; pixel_j++)
+		{
+			graphene_ray_t ray;
+
+			compute_ray (tracer, pixel_i, pixel_j, &ray);
+
+			if (intersect_object (tracer, &ray))
+			{
+				put_pixel (tracer->image.pixbuf,
+					   pixel_i, pixel_j,
+					   0xff, 0x00, 0x00);
+			}
+		}
+	}
 }
 
 int
