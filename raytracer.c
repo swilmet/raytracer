@@ -167,7 +167,18 @@ static bool
 intersect_object (Raytracer      *tracer,
 		  graphene_ray_t *ray)
 {
-	return true;
+	graphene_point3d_t center;
+	graphene_point3d_t closest_point;
+
+	graphene_sphere_get_center (&tracer->sphere_red, &center);
+	graphene_ray_get_closest_point_to_point (ray, &center, &closest_point);
+
+	if (graphene_ray_get_distance_to_point (ray, &closest_point) < 0)
+	{
+		return false;
+	}
+
+	return graphene_sphere_contains_point (&tracer->sphere_red, &closest_point);
 }
 
 static void
