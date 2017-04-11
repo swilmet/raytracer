@@ -7,10 +7,10 @@ EXECUTABLE = raytracer
 
 .PHONY: clean
 
+all: $(EXECUTABLE)
+
 $(EXECUTABLE): $(OBJS)
 	$(CC) $(OBJS) $(LDFLAGS) -o $(EXECUTABLE)
-
-all: $(EXECUTABLE)
 
 clean:
 	rm -f $(OBJS) $(EXECUTABLE)
